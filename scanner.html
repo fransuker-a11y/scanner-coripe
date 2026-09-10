@@ -260,7 +260,6 @@ return null;
 
 
 /* REGISTRAR PULSERA SIN SALIR DE LA PAGINA */
-
 function registrarPulsera(id, despues){
 
   const formulario = document.createElement("form");
@@ -289,26 +288,19 @@ function registrarPulsera(id, despues){
   formulario.appendChild(campoAccion);
   formulario.appendChild(campoVoluntario);
 
-  registroPendiente = despues;
-
   document.body.appendChild(formulario);
 
   formulario.submit();
 
   setTimeout(function(){
+
     formulario.remove();
-  }, 3000);
-}
 
-function listoParaOtra(){
+    if(despues){
+      despues();
+    }
 
-document.getElementById("numero").value = "";
-
-document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
-
-procesando = false;
-
+  },1000);
 }
 
 
