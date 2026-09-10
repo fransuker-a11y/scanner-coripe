@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escáner Coripe</title>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  background:#eeeeee;
+}
+
+.contenedor{
+  padding:20px 10px 40px;
+}
+
+h1{
+  font-size:42px;
+  margin:10px 0;
+}
+
+.info{
+  background:white;
+  border-radius:20px;
+  padding:20px 10px;
+  margin-bottom:20px;
+}
+
+.voluntario{
+  font-size:32px;
+  font-weight:900;
+}
+
+.accion{
+  font-size:42px;
+  font-weight:900;
+  margin-top:10px;
+}
+
+#reader{
+  width:100%;
+  max-width:600px;
+  margin:20px auto;
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
+}
+
+.mensaje{
+  font-size:25px;
+  font-weight:900;
+  margin:20px;
+}
+
+.volver{
+  display:inline-block;
+  padding:18px 35px;
+  background:#555;
+  color:white;
+  text-decoration:none;
+  border-radius:15px;
+  font-size:24px;
+  font-weight:900;
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+<h1>📷 ESCANEAR QR</h1>
+
+<div class="info">
+<div class="voluntario" id="voluntario"></div>
+<div class="accion" id="accion"></div>
+</div>
+
+<div id="reader"></div>
+
+<div class="mensaje" id="mensaje">
+📷 Apunta la cámara al QR de la pulsera
+</div>
+
+<a class="volver" id="volver" href="#">
+⬅️ VOLVER
+</a>
+
+</div>
+
+<script>
+
+const APP_URL =
+"https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
+
+const parametros =
+new URLSearchParams(window.location.search);
+
+const voluntario =
+(parametros.get("voluntario") || "").trim().toUpperCase();
+
+const accion =
+(parametros.get("accion") || "").trim().toLowerCase();
+
+document.getElementById("voluntario").textContent =
+"👤 " + voluntario;
+
+let nombreAccion = accion;
+
+if(accion === "bebida"){
+  nombreAccion = "🥤 BEBIDA";
+}
+
+if(accion === "finished"){
+  nombreAccion = "🏁 FINISHED";
+}
+
+if(accion === "almuerzo"){
+  nombreAccion = "🍽️ ALMUERZO";
+}
+
+document.getElementById("accion").textContent =
+nombreAccion;
+
+document.getElementById("volver").href =
+APP_URL +
+"?voluntario=" +
+encodeURIComponent(voluntario);
+
+function extraerId(texto){
+
+  texto = String(texto).trim();
+
+  let encontrado =
+  texto.match(/[?&]id=([0-9]+)/i);
+
+  if(encontrado){
+    return encontrado[1];
+  }
+
+  if(/^[0-9]+$/.test(texto)){
+    return texto;
+  }
+
+  return null;
+}
+
+let procesando = false;
+
+function qrLeido(texto){
+
+  if(procesando){
+    return;
+  }
+
+  procesando = true;
+
+  const id = extraerId(texto);
+
+  if(!id){
+
+    procesando = false;
+
+    document.getElementById("mensaje").innerHTML =
+    "❌ QR NO VÁLIDO";
+
+    setTimeout(function(){
+
+      document.getElementById("mensaje").innerHTML =
+      "📷 Apunta la cámara al QR de la pulsera";
+
+    },2000);
+
+    return;
+  }
+
+  const numero = Number(id);
+
+  if(!numero || numero < 1 || numero > 661){
+
+    procesando = false;
+
+    document.getElementById("mensaje").innerHTML =
+    "❌ PULSERA NO VÁLIDA";
+
+    return;
+  }
+
+  document.getElementById("mensaje").innerHTML =
+  "✅ PULSERA " + id + "<br>PROCESANDO...";
+
+  const destino =
+  APP_URL +
+  "?id=" + encodeURIComponent(id) +
+  "&accion=" + encodeURIComponent(accion) +
+  "&voluntario=" + encodeURIComponent(voluntario);
+
+  scanner.stop().then(function(){
+
+    window.location.href = destino;
+
+  }).catch(function(){
+
+    window.location.href = destino;
+
+  });
+}
+
+const scanner =
+new Html5Qrcode("reader");
+
+scanner.start(
+  {facingMode:"environment"},
+
+  {
+    fps:10,
+    qrbox:{
+      width:280,
+      height:280
+    }
+  },
+
+  qrLeido,
+
+  function(errorMessage){
+  }
+
+).catch(function(error){
+
+  document.getElementById("mensaje").innerHTML =
+  "❌ NO SE PUEDE ABRIR LA CÁMARA<br><br>" +
+  "Comprueba que has permitido el acceso a la cámara.";
+
+});
+
+</script>
+
+</body>
+</html>
