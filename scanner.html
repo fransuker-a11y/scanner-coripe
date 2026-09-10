@@ -470,8 +470,52 @@ return null;
 
 
 /* REGISTRAR PULSERA */
-
 function registrarPulsera(id, despues){
+
+const comprobacion =
+document.createElement("iframe");
+
+comprobacion.style.display = "none";
+
+comprobacion.src =
+APP_URL +
+"?check=1&id=" +
+encodeURIComponent(id) +
+"&accion=" +
+encodeURIComponent(accion);
+
+document.body.appendChild(comprobacion);
+
+function recibirResultado(event){
+
+if(!event.data){
+return;
+}
+
+if(
+event.data.tipo === "comprobacion" &&
+String(event.data.id) === String(id)
+){
+
+window.removeEventListener(
+"message",
+recibirResultado
+);
+
+comprobacion.remove();
+
+if(event.data.entregada === true){
+
+document.getElementById("mensaje").innerHTML =
+"<span style='color:red'>🔴 YA ENTREGADA</span>";
+
+procesando = false;
+
+return;
+}
+
+
+/* NO ESTÁ ENTREGADA → REGISTRAR */
 
 const formulario =
 document.createElement("form");
@@ -527,7 +571,14 @@ despues();
 
 }
 
+}
 
+window.addEventListener(
+"message",
+recibirResultado
+);
+
+}
 /* LISTO PARA OTRA */
 
 function listoParaOtra(){
