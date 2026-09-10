@@ -234,6 +234,7 @@ return null;
 
 
 /* REGISTRAR PULSERA */
+
 function registrarPulsera(id, despues){
 
 const formulario =
@@ -283,7 +284,7 @@ setTimeout(function(){
 formulario.remove();
 
 if(despues){
-despues(true);
+despues();
 }
 
 },1000);
@@ -291,37 +292,16 @@ despues(true);
 }
 
 
+/* LISTO PARA OTRA */
 
-/* COMPROBAR SI YA EXISTE */
+function listoParaOtra(){
 
-const script =
-document.createElement("script");
-
-script.src =
-APP_URL +
-"?check=1" +
-"&id=" + encodeURIComponent(id) +
-"&accion=" + encodeURIComponent(accion) +
-"&callback=" + callback;
-
-document.body.appendChild(script);
-
-setTimeout(function(){
-
-script.remove();
-
-if(window[callback]){
-
-delete window[callback];
+document.getElementById("numero").value = "";
 
 document.getElementById("mensaje").innerHTML =
-"❌ ERROR AL COMPROBAR LA PULSERA";
+"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
 
 procesando = false;
-
-}
-
-},5000);
 
 }
 
@@ -416,21 +396,15 @@ if(procesando){
 return;
 }
 
-
 const id =
 extraerId(texto);
 
-
 if(!id){
-
 return;
-
 }
-
 
 const numero =
 Number(id);
-
 
 if(numero < 1 || numero > 661){
 
@@ -438,12 +412,9 @@ document.getElementById("mensaje").innerHTML =
 "❌ PULSERA NO VÁLIDA";
 
 return;
-
 }
 
-
 procesando = true;
-
 
 document.getElementById("mensaje").innerHTML =
 "⏳ REGISTRANDO PULSERA " + id + "...";
@@ -457,11 +428,9 @@ return scanner.clear();
 
 scanner = null;
 
-registrarPulsera(id,function(registrada){
+registrarPulsera(id,function(){
 
-if(!registrada){
-return;
-}
+document.getElementById("numero").value = id;
 
 document.getElementById("mensaje").innerHTML =
 "✅ PULSERA " + id + "<br>REGISTRADA";
@@ -469,12 +438,25 @@ document.getElementById("mensaje").innerHTML =
 
 setTimeout(function(){
 
-listoParaOtra();
+document.getElementById("numero").value = "";
+
+document.getElementById("mensaje").innerHTML =
+"📷 ABRIENDO SIGUIENTE QR...";
+
+procesando = false;
+
+
+/* ESPERAR ANTES DE ABRIR OTRA VEZ */
+
+setTimeout(function(){
+
+abrirCamara();
+
+},1000);
 
 },1500);
 
 });
-
 
 }).catch(function(){
 
