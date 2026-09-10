@@ -437,10 +437,11 @@ return scanner.clear();
 
 scanner = null;
 
+registrarPulsera(id,function(registrada){
 
-registrarPulsera(id,function(){
-
-document.getElementById("numero").value = id;
+if(!registrada){
+return;
+}
 
 document.getElementById("mensaje").innerHTML =
 "✅ PULSERA " + id + "<br>REGISTRADA";
@@ -448,25 +449,12 @@ document.getElementById("mensaje").innerHTML =
 
 setTimeout(function(){
 
-document.getElementById("numero").value = "";
-
-document.getElementById("mensaje").innerHTML =
-"📷 ABRIENDO SIGUIENTE QR...";
-
-procesando = false;
-
-
-/* ESPERAR ANTES DE ABRIR OTRA VEZ */
-
-setTimeout(function(){
-
-abrirCamara();
-
-},1000);
+listoParaOtra();
 
 },1500);
 
 });
+
 
 }).catch(function(){
 
