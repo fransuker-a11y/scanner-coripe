@@ -98,13 +98,20 @@ font-size:28px;
 font-weight:900;
 margin:20px;
 }
+
+#registroOculto{
+display:none;
+}
 </style>
 </head>
 
 <body>
 
-<iframe name="registroOculto" id="registroOculto" style="display:none;"></iframe>
-  
+<iframe
+name="registroOculto"
+id="registroOculto">
+</iframe>
+
 <div class="voluntario" id="voluntario"></div>
 
 <div class="info">
@@ -198,6 +205,53 @@ document.getElementById("accion").textContent =
 tituloAccion;
 
 
+/* FUNCION DE ENVIO */
+
+function registrarPulsera(id){
+
+const formularioOculto =
+document.createElement("form");
+
+formularioOculto.method = "GET";
+formularioOculto.action = APP_URL;
+formularioOculto.target = "registroOculto";
+formularioOculto.style.display = "none";
+
+const campoId =
+document.createElement("input");
+
+campoId.name = "id";
+campoId.value = id;
+
+const campoAccion =
+document.createElement("input");
+
+campoAccion.name = "accion";
+campoAccion.value = accion;
+
+const campoVoluntario =
+document.createElement("input");
+
+campoVoluntario.name = "voluntario";
+campoVoluntario.value = voluntario;
+
+formularioOculto.appendChild(campoId);
+formularioOculto.appendChild(campoAccion);
+formularioOculto.appendChild(campoVoluntario);
+
+document.body.appendChild(formularioOculto);
+
+formularioOculto.submit();
+
+setTimeout(function(){
+
+formularioOculto.remove();
+
+},3000);
+
+}
+
+
 /* MANUAL */
 
 document.getElementById("formulario").addEventListener(
@@ -221,186 +275,6 @@ document.getElementById("mensaje").innerHTML =
 return;
 }
 
-fetch(
-APP_URL +
-"?id=" + encodeURIComponent(id) +
-"&accion=" + encodeURIComponent(accion) +
-"&voluntario=" + encodeURIComponent(voluntario)
-)
-.then(function(){
+registrarPulsera(id);
 
 document.getElementById("mensaje").innerHTML =
-"✅ PULSERA " + id + "<br>REGISTRADA";
-
-procesando = false;
-
-setTimeout(function(){
-
-document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
-
-},2000);
-
-})
-.catch(function(){
-
-document.getElementById("mensaje").innerHTML =
-"❌ ERROR AL REGISTRAR";
-
-procesando = false;
-
-});
-
-});
-
-
-/* CAMARA */
-
-let scanner = null;
-let procesando = false;
-
-function extraerId(texto){
-
-texto = String(texto).trim();
-
-let encontrado =
-texto.match(/[?&]id=([0-9]+)/i);
-
-if(encontrado){
-return encontrado[1];
-}
-
-if(/^[0-9]+$/.test(texto)){
-return texto;
-}
-
-return null;
-}
-
-
-function abrirCamara(){
-
-if(scanner !== null){
-return;
-}
-
-scanner =
-new Html5Qrcode("reader");
-
-document.getElementById("mensaje").innerHTML =
-"📷 ABRIENDO CÁMARA...";
-
-scanner.start(
-
-{facingMode:"environment"},
-
-{
-fps:10,
-qrbox:{
-width:280,
-height:280
-}
-},
-
-function(texto){
-
-if(procesando){
-return;
-}
-
-procesando = true;
-
-const id =
-extraerId(texto);
-
-if(!id){
-
-procesando = false;
-
-document.getElementById("mensaje").innerHTML =
-"❌ QR NO VÁLIDO";
-
-return;
-}
-
-const numero =
-Number(id);
-
-if(numero < 1 || numero > 661){
-
-document.getElementById("mensaje").innerHTML =
-"❌ PULSERA NO VÁLIDA";
-
-return;
-}
-
-document.getElementById("mensaje").innerHTML =
-"✅ PULSERA " + id + "<br>PROCESANDO...";
-
-scanner.stop().then(function(){
-
-fetch(
-APP_URL +
-"?id=" + encodeURIComponent(id) +
-"&accion=" + encodeURIComponent(accion) +
-"&voluntario=" + encodeURIComponent(voluntario)
-)
-
-.then(function(){
-
-document.getElementById("mensaje").innerHTML =
-"✅ PULSERA " + id + "<br>REGISTRADA";
-
-scanner = null;
-procesando = false;
-
-document.getElementById("numero").value = "";
-
-setTimeout(function(){
-
-document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
-
-},2000);
-
-})
-
-.catch(function(){
-
-document.getElementById("mensaje").innerHTML =
-"❌ ERROR AL REGISTRAR";
-
-scanner = null;
-procesando = false;
-
-});
-
-}).catch(function(){
-
-document.getElementById("mensaje").innerHTML =
-"❌ ERROR AL DETENER LA CÁMARA";
-
-scanner = null;
-procesando = false;
-
-});
-
-},
-
-function(errorMessage){
-}
-
-).catch(function(error){
-
-document.getElementById("mensaje").innerHTML =
-"❌ NO SE PUEDE ABRIR LA CÁMARA<br><br>" +
-"Comprueba el permiso de cámara.";
-
-});
-
-}
-
-</script>
-
-</body>
-</html>
