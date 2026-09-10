@@ -1,170 +1,102 @@
+@@ -1 +1,247 @@
+scanner.html.
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control Coripe</title>
+<title>Escáner Coripe</title>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-body{
-margin:0;
-padding:20px 10px 40px;
-font-family:Arial,sans-serif;
-text-align:center;
-background:#eeeeee;
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  font-family:Arial,sans-serif;
+  text-align:center;
+  background:#eeeeee;
 }
 
-.voluntario{
-font-size:55px;
-font-weight:900;
-margin:10px 0 25px;
+.contenedor{
+  padding:20px 10px 40px;
+}
+
+h1{
+  font-size:42px;
+  margin:10px 0;
 }
 
 .info{
-background:white;
-border-radius:25px;
-padding:25px 10px;
+  background:white;
+  border-radius:20px;
+  padding:20px 10px;
+  margin-bottom:20px;
 }
 
-.titulo{
-font-size:35px;
-font-weight:900;
+.voluntario{
+  font-size:32px;
+  font-weight:900;
 }
 
 .accion{
-font-size:65px;
-font-weight:900;
-margin-top:15px;
-}
-
-.pulsera{
-font-size:38px;
-font-weight:900;
-margin:30px 0 15px;
-}
-
-.numero{
-font-size:75px;
-font-weight:900;
-width:300px;
-height:120px;
-text-align:center;
-border:6px solid #222;
-border-radius:25px;
-}
-
-.enviar{
-font-size:55px;
-font-weight:900;
-width:95%;
-max-width:600px;
-height:125px;
-margin-top:25px;
-background:#4CAF50;
-color:white;
-border:none;
-border-radius:30px;
-}
-
-.escanear{
-margin-top:40px;
-font-size:40px;
-font-weight:900;
+  font-size:42px;
+  font-weight:900;
+  margin-top:10px;
 }
 
 #reader{
-width:100%;
-max-width:600px;
-margin:20px auto;
-background:white;
-border-radius:20px;
-overflow:hidden;
-}
-
-.boton-camara{
-font-size:40px;
-font-weight:900;
-padding:25px 35px;
-background:#2196F3;
-color:white;
-border:none;
-border-radius:30px;
+  width:100%;
+  max-width:600px;
+  margin:20px auto;
+  background:white;
+  border-radius:20px;
+  overflow:hidden;
 }
 
 .mensaje{
-font-size:28px;
-font-weight:900;
-margin:20px;
+  font-size:25px;
+  font-weight:900;
+  margin:20px;
 }
 
-#registroOculto{
-display:none;
+.volver{
+  display:inline-block;
+  padding:18px 35px;
+  background:#555;
+  color:white;
+  text-decoration:none;
+  border-radius:15px;
+  font-size:24px;
+  font-weight:900;
 }
 </style>
 </head>
 
 <body>
 
-<iframe
-name="registroOculto"
-id="registroOculto">
-</iframe>
+<div class="contenedor">
 
-<div class="voluntario" id="voluntario"></div>
+<h1>📷 ESCANEAR QR</h1>
 
 <div class="info">
-
-<div class="titulo">
-CONTROL AUTORIZADO
-</div>
-
+<div class="voluntario" id="voluntario"></div>
 <div class="accion" id="accion"></div>
-
-</div>
-
-<div class="pulsera">
-NUMERO DE PULSERA
-</div>
-
-<form id="formulario">
-
-<input
-class="numero"
-id="numero"
-type="number"
-min="1"
-max="661"
-required
-inputmode="numeric">
-
-<br>
-
-<button class="enviar" type="submit">
-ENVIAR
-</button>
-
-</form>
-
-<div class="escanear">
-📷 ESCANEAR QR
 </div>
 
 <div id="reader"></div>
 
 <div class="mensaje" id="mensaje">
-Pulsa ABRIR CÁMARA
+📷 Apunta la cámara al QR de la pulsera
 </div>
 
-<button
-class="boton-camara"
-type="button"
-onclick="abrirCamara()">
+<a class="volver" id="volver" href="#">
+⬅️ VOLVER
+</a>
 
-📷 ABRIR CÁMARA
-
-</button>
+</div>
 
 <script>
 
@@ -175,102 +107,143 @@ const parametros =
 new URLSearchParams(window.location.search);
 
 const voluntario =
-(parametros.get("voluntario") || "")
-.trim()
-.toUpperCase();
+(parametros.get("voluntario") || "").trim().toUpperCase();
 
 const accion =
-(parametros.get("accion") || "")
-.trim()
-.toLowerCase();
+(parametros.get("accion") || "").trim().toLowerCase();
 
 document.getElementById("voluntario").textContent =
-"👤 VOLUNTARIO " + voluntario;
+"👤 " + voluntario;
 
-let tituloAccion = accion;
+let nombreAccion = accion;
 
 if(accion === "bebida"){
-tituloAccion = "🥤 BEBIDA";
+  nombreAccion = "🥤 BEBIDA";
 }
 
 if(accion === "finished"){
-tituloAccion = "🏁 FINISHED";
+  nombreAccion = "🏁 FINISHED";
 }
 
 if(accion === "almuerzo"){
-tituloAccion = "🍽️ ALMUERZO";
+  nombreAccion = "🍽️ ALMUERZO";
 }
 
 document.getElementById("accion").textContent =
-tituloAccion;
+nombreAccion;
 
+document.getElementById("volver").href =
+APP_URL +
+"?voluntario=" +
+encodeURIComponent(voluntario);
 
-/* FUNCION DE ENVIO */
+function extraerId(texto){
 
-function registrarPulsera(id){
+  texto = String(texto).trim();
 
-const formularioOculto =
-document.createElement("form");
+  let encontrado =
+  texto.match(/[?&]id=([0-9]+)/i);
 
-formularioOculto.method = "GET";
-formularioOculto.action = APP_URL;
-formularioOculto.target = "registroOculto";
-formularioOculto.style.display = "none";
+  if(encontrado){
+    return encontrado[1];
+  }
 
-const campoId =
-document.createElement("input");
+  if(/^[0-9]+$/.test(texto)){
+    return texto;
+  }
 
-campoId.type = "hidden";
-campoId.name = "id";
-campoId.value = id;
-
-const campoAccion =
-document.createElement("input");
-
-campoAccion.type = "hidden";
-campoAccion.name = "accion";
-campoAccion.value = accion;
-
-const campoVoluntario =
-document.createElement("input");
-
-campoVoluntario.type = "hidden";
-campoVoluntario.name = "voluntario";
-campoVoluntario.value = voluntario;
-
-formularioOculto.appendChild(campoId);
-formularioOculto.appendChild(campoAccion);
-formularioOculto.appendChild(campoVoluntario);
-
-document.body.appendChild(formularioOculto);
-
-formularioOculto.submit();
-
-setTimeout(function(){
-
-formularioOculto.remove();
-
-},3000);
-
+  return null;
 }
 
+let procesando = false;
 
-/* MANUAL */
+function qrLeido(texto){
 
-document.getElementById("formulario").addEventListener(
-"submit",
-function(e){
+  if(procesando){
+    return;
+  }
 
-e.preventDefault();
+  procesando = true;
 
-const id =
-document.getElementById("numero").value;
+  const id = extraerId(texto);
 
-if(!id){
-return;
+  if(!id){
+
+    procesando = false;
+
+    document.getElementById("mensaje").innerHTML =
+    "❌ QR NO VÁLIDO";
+
+    setTimeout(function(){
+
+      document.getElementById("mensaje").innerHTML =
+      "📷 Apunta la cámara al QR de la pulsera";
+
+    },2000);
+
+    return;
+  }
+
+  const numero = Number(id);
+
+  if(!numero || numero < 1 || numero > 661){
+
+    procesando = false;
+
+    document.getElementById("mensaje").innerHTML =
+    "❌ PULSERA NO VÁLIDA";
+
+    return;
+  }
+
+  document.getElementById("mensaje").innerHTML =
+  "✅ PULSERA " + id + "<br>PROCESANDO...";
+
+  const destino =
+  APP_URL +
+  "?id=" + encodeURIComponent(id) +
+  "&accion=" + encodeURIComponent(accion) +
+  "&voluntario=" + encodeURIComponent(voluntario);
+
+  scanner.stop().then(function(){
+
+    window.location.href = destino;
+
+  }).catch(function(){
+
+    window.location.href = destino;
+
+  });
 }
 
-if(Number(id) < 1 || Number(id) > 661){
+const scanner =
+new Html5Qrcode("reader");
 
-document.getElementById("mensaje").innerHTML =
-"❌ PULSERA NO VÁL
+scanner.start(
+  {facingMode:"environment"},
+
+  {
+    fps:10,
+    qrbox:{
+      width:280,
+      height:280
+    }
+  },
+
+  qrLeido,
+
+  function(errorMessage){
+  }
+
+).catch(function(error){
+
+  document.getElementById("mensaje").innerHTML =
+  "❌ NO SE PUEDE ABRIR LA CÁMARA<br><br>" +
+  "Comprueba que has permitido el acceso a la cámara.";
+
+});
+
+</script>
+
+</body>
+</html>
