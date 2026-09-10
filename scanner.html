@@ -195,7 +195,6 @@ tituloAccion = "🍽️ ALMUERZO";
 document.getElementById("accion").textContent =
 tituloAccion;
 
-
 /* MANUAL */
 
 document.getElementById("formulario").addEventListener(
@@ -219,16 +218,22 @@ document.getElementById("mensaje").innerHTML =
 return;
 }
 
-window.location.href =
+document.getElementById("mensaje").innerHTML =
+"⏳ REGISTRANDO PULSERA " + id + "...";
+
+const url =
 APP_URL +
 "?id=" + encodeURIComponent(id) +
 "&accion=" + encodeURIComponent(accion) +
 "&voluntario=" + encodeURIComponent(voluntario);
 
-document.getElementById("mensaje").innerHTML =
-"✅ PULSERA " + id + "<br>REGISTRADA";
+const ventana =
+window.open(url, "_blank");
 
-procesando = false;
+if(ventana){
+
+document.getElementById("mensaje").innerHTML =
+"✅ PULSERA " + id + "<br>ENVIADA";
 
 setTimeout(function(){
 
@@ -237,15 +242,12 @@ document.getElementById("mensaje").innerHTML =
 
 },2000);
 
-})
-.catch(function(){
+}else{
 
 document.getElementById("mensaje").innerHTML =
-"❌ ERROR AL REGISTRAR";
+"❌ NO SE PUDO ENVIAR";
 
-procesando = false;
-
-});
+}
 
 });
 
