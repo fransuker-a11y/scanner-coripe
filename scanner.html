@@ -234,8 +234,31 @@ return null;
 
 
 /* REGISTRAR PULSERA */
-
 function registrarPulsera(id, despues){
+
+const callback = "comprobar_" + Date.now();
+
+window[callback] = function(respuesta){
+
+delete window[callback];
+
+if(respuesta.entregada){
+
+document.getElementById("mensaje").innerHTML =
+"❌ <span style='color:red;font-size:38px;'>YA ENTREGADA</span><br>" +
+"PULSERA " + id;
+
+procesando = false;
+
+if(despues){
+despues(false);
+}
+
+return;
+}
+
+
+/* NO ESTÁ ENTREGADA → REGISTRAR */
 
 const formulario =
 document.createElement("form");
@@ -284,24 +307,44 @@ setTimeout(function(){
 formulario.remove();
 
 if(despues){
-despues();
+despues(true);
 }
 
 },1000);
 
-}
+};
 
 
-/* LISTO PARA OTRA */
+/* COMPROBAR SI YA EXISTE */
 
-function listoParaOtra(){
+const script =
+document.createElement("script");
 
-document.getElementById("numero").value = "";
+script.src =
+APP_URL +
+"?check=1" +
+"&id=" + encodeURIComponent(id) +
+"&accion=" + encodeURIComponent(accion) +
+"&callback=" + callback;
+
+document.body.appendChild(script);
+
+setTimeout(function(){
+
+script.remove();
+
+if(window[callback]){
+
+delete window[callback];
 
 document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
+"❌ ERROR AL COMPROBAR LA PULSERA";
 
 procesando = false;
+
+}
+
+},5000);
 
 }
 
