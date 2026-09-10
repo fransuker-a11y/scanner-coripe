@@ -220,18 +220,21 @@ formularioOculto.style.display = "none";
 const campoId =
 document.createElement("input");
 
+campoId.type = "hidden";
 campoId.name = "id";
 campoId.value = id;
 
 const campoAccion =
 document.createElement("input");
 
+campoAccion.type = "hidden";
 campoAccion.name = "accion";
 campoAccion.value = accion;
 
 const campoVoluntario =
 document.createElement("input");
 
+campoVoluntario.type = "hidden";
 campoVoluntario.name = "voluntario";
 campoVoluntario.value = voluntario;
 
@@ -270,11 +273,4 @@ return;
 if(Number(id) < 1 || Number(id) > 661){
 
 document.getElementById("mensaje").innerHTML =
-"❌ PULSERA NO VÁLIDA";
-
-return;
-}
-
-registrarPulsera(id);
-
-document.getElementById("mensaje").innerHTML =
+"❌ PULSERA NO VÁL
