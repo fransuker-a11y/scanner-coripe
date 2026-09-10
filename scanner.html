@@ -472,51 +472,6 @@ return null;
 /* REGISTRAR PULSERA */
 function registrarPulsera(id, despues){
 
-const comprobacion =
-document.createElement("iframe");
-
-comprobacion.style.display = "none";
-
-comprobacion.src =
-APP_URL +
-"?check=1&id=" +
-encodeURIComponent(id) +
-"&accion=" +
-encodeURIComponent(accion);
-
-document.body.appendChild(comprobacion);
-
-function recibirResultado(event){
-
-if(!event.data){
-return;
-}
-
-if(
-event.data.tipo === "comprobacion" &&
-String(event.data.id) === String(id)
-){
-
-window.removeEventListener(
-"message",
-recibirResultado
-);
-
-comprobacion.remove();
-
-if(event.data.entregada === true){
-
-document.getElementById("mensaje").innerHTML =
-"<span style='color:red'>🔴 YA ENTREGADA</span>";
-
-procesando = false;
-
-return;
-}
-
-
-/* NO ESTÁ ENTREGADA → REGISTRAR */
-
 const formulario =
 document.createElement("form");
 
@@ -525,14 +480,12 @@ formulario.action = APP_URL;
 formulario.target = "registroOculto";
 formulario.style.display = "none";
 
-
 const campoId =
 document.createElement("input");
 
 campoId.type = "hidden";
 campoId.name = "id";
 campoId.value = id;
-
 
 const campoAccion =
 document.createElement("input");
@@ -541,14 +494,12 @@ campoAccion.type = "hidden";
 campoAccion.name = "accion";
 campoAccion.value = accion;
 
-
 const campoVoluntario =
 document.createElement("input");
 
 campoVoluntario.type = "hidden";
 campoVoluntario.name = "voluntario";
 campoVoluntario.value = voluntario;
-
 
 formulario.appendChild(campoId);
 formulario.appendChild(campoAccion);
@@ -557,7 +508,6 @@ formulario.appendChild(campoVoluntario);
 document.body.appendChild(formulario);
 
 formulario.submit();
-
 
 setTimeout(function(){
 
@@ -570,28 +520,6 @@ despues();
 },1000);
 
 }
-
-}
-
-window.addEventListener(
-"message",
-recibirResultado
-);
-
-}
-/* LISTO PARA OTRA */
-
-function listoParaOtra(){
-
-document.getElementById("numero").value = "";
-
-document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
-
-procesando = false;
-
-}
-
 
 /* =========================
    MANUAL
