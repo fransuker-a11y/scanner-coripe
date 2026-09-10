@@ -236,30 +236,6 @@ return null;
 /* REGISTRAR PULSERA */
 function registrarPulsera(id, despues){
 
-const callback = "comprobar_" + Date.now();
-
-window[callback] = function(respuesta){
-
-delete window[callback];
-
-if(respuesta.entregada){
-
-document.getElementById("mensaje").innerHTML =
-"❌ <span style='color:red;font-size:38px;'>YA ENTREGADA</span><br>" +
-"PULSERA " + id;
-
-procesando = false;
-
-if(despues){
-despues(false);
-}
-
-return;
-}
-
-
-/* NO ESTÁ ENTREGADA → REGISTRAR */
-
 const formulario =
 document.createElement("form");
 
@@ -312,7 +288,8 @@ despues(true);
 
 },1000);
 
-};
+}
+
 
 
 /* COMPROBAR SI YA EXISTE */
