@@ -211,7 +211,32 @@ tituloAccion;
 
 let scanner = null;
 let procesando = false;
+let registroPendiente = null;
 
+window.addEventListener("message", function(event) {
+
+  const iframe = document.getElementById("registroOculto");
+
+  if (!iframe || event.source !== iframe.contentWindow) {
+    return;
+  }
+
+  const datos = event.data || {};
+
+  if (datos.tipo !== "registro") {
+    return;
+  }
+
+  if (!registroPendiente) {
+    return;
+  }
+
+  const despues = registroPendiente;
+  registroPendiente = null;
+
+  despues(datos);
+});
+  
 
 /* EXTRAER NUMERO DEL QR */
 
@@ -238,61 +263,42 @@ return null;
 
 function registrarPulsera(id, despues){
 
-const formulario =
-document.createElement("form");
+  const formulario = document.createElement("form");
 
-formulario.method = "GET";
-formulario.action = APP_URL;
-formulario.target = "registroOculto";
-formulario.style.display = "none";
+  formulario.method = "GET";
+  formulario.action = APP_URL;
+  formulario.target = "registroOculto";
+  formulario.style.display = "none";
 
+  const campoId = document.createElement("input");
+  campoId.type = "hidden";
+  campoId.name = "id";
+  campoId.value = id;
 
-const campoId =
-document.createElement("input");
+  const campoAccion = document.createElement("input");
+  campoAccion.type = "hidden";
+  campoAccion.name = "accion";
+  campoAccion.value = accion;
 
-campoId.type = "hidden";
-campoId.name = "id";
-campoId.value = id;
+  const campoVoluntario = document.createElement("input");
+  campoVoluntario.type = "hidden";
+  campoVoluntario.name = "voluntario";
+  campoVoluntario.value = voluntario;
 
+  formulario.appendChild(campoId);
+  formulario.appendChild(campoAccion);
+  formulario.appendChild(campoVoluntario);
 
-const campoAccion =
-document.createElement("input");
+  registroPendiente = despues;
 
-campoAccion.type = "hidden";
-campoAccion.name = "accion";
-campoAccion.value = accion;
+  document.body.appendChild(formulario);
 
+  formulario.submit();
 
-const campoVoluntario =
-document.createElement("input");
-
-campoVoluntario.type = "hidden";
-campoVoluntario.name = "voluntario";
-campoVoluntario.value = voluntario;
-
-
-formulario.appendChild(campoId);
-formulario.appendChild(campoAccion);
-formulario.appendChild(campoVoluntario);
-
-document.body.appendChild(formulario);
-
-formulario.submit();
-
-setTimeout(function(){
-
-formulario.remove();
-
-if(despues){
-despues();
+  setTimeout(function(){
+    formulario.remove();
+  }, 3000);
 }
-
-},1000);
-
-}
-
-
-/* PREPARAR SIGUIENTE PULSERA */
 
 function listoParaOtra(){
 
