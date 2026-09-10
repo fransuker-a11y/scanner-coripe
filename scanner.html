@@ -219,11 +219,35 @@ document.getElementById("mensaje").innerHTML =
 return;
 }
 
-window.location.href =
+fetch(
 APP_URL +
 "?id=" + encodeURIComponent(id) +
 "&accion=" + encodeURIComponent(accion) +
-"&voluntario=" + encodeURIComponent(voluntario);
+"&voluntario=" + encodeURIComponent(voluntario)
+)
+.then(function(){
+
+document.getElementById("mensaje").innerHTML =
+"✅ PULSERA " + id + "<br>REGISTRADA";
+
+procesando = false;
+
+setTimeout(function(){
+
+document.getElementById("mensaje").innerHTML =
+"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
+
+},2000);
+
+})
+.catch(function(){
+
+document.getElementById("mensaje").innerHTML =
+"❌ ERROR AL REGISTRAR";
+
+procesando = false;
+
+});
 
 });
 
@@ -313,19 +337,49 @@ document.getElementById("mensaje").innerHTML =
 
 scanner.stop().then(function(){
 
-window.location.href =
+fetch(
 APP_URL +
 "?id=" + encodeURIComponent(id) +
 "&accion=" + encodeURIComponent(accion) +
-"&voluntario=" + encodeURIComponent(voluntario);
+"&voluntario=" + encodeURIComponent(voluntario)
+)
+
+.then(function(){
+
+document.getElementById("mensaje").innerHTML =
+"✅ PULSERA " + id + "<br>REGISTRADA";
+
+scanner = null;
+procesando = false;
+
+document.getElementById("numero").value = "";
+
+setTimeout(function(){
+
+document.getElementById("mensaje").innerHTML =
+"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
+
+},2000);
+
+})
+
+.catch(function(){
+
+document.getElementById("mensaje").innerHTML =
+"❌ ERROR AL REGISTRAR";
+
+scanner = null;
+procesando = false;
+
+});
 
 }).catch(function(){
 
-window.location.href =
-APP_URL +
-"?id=" + encodeURIComponent(id) +
-"&accion=" + encodeURIComponent(accion) +
-"&voluntario=" + encodeURIComponent(voluntario);
+document.getElementById("mensaje").innerHTML =
+"❌ ERROR AL DETENER LA CÁMARA";
+
+scanner = null;
+procesando = false;
 
 });
 
