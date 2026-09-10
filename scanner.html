@@ -367,9 +367,9 @@ listoParaOtra();
 
 function abrirCamara(){
 
-  if(scanner !== null || procesando){
-    return;
-  }
+if(scanner !== null){
+  return;
+} 
 
   scanner = new Html5Qrcode("reader");
 
