@@ -116,13 +116,8 @@ style="display:none;">
 <div class="voluntario" id="voluntario"></div>
 
 <div class="info">
-
-<div class="titulo">
-CONTROL AUTORIZADO
-</div>
-
+<div class="titulo">CONTROL AUTORIZADO</div>
 <div class="accion" id="accion"></div>
-
 </div>
 
 <div class="pulsera">
@@ -162,9 +157,7 @@ Pulsa ABRIR CÁMARA
 class="boton-camara"
 type="button"
 onclick="abrirCamara()">
-
 📷 ABRIR CÁMARA
-
 </button>
 
 <script>
@@ -208,6 +201,9 @@ tituloAccion;
 let scanner = null;
 let procesando = false;
 
+
+/* EXTRAER ID DEL QR */
+
 function extraerId(texto){
 
 texto = String(texto).trim();
@@ -227,7 +223,7 @@ return null;
 }
 
 
-/* REGISTRAR */
+/* REGISTRAR PULSERA */
 
 function registrarPulsera(id, despues){
 
@@ -281,20 +277,6 @@ despues();
 }
 
 
-/* LISTO */
-
-function listoParaOtra(){
-
-document.getElementById("numero").value = "";
-
-document.getElementById("mensaje").innerHTML =
-"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
-
-procesando = false;
-
-}
-
-
 /* MANUAL */
 
 document.getElementById("formulario").addEventListener(
@@ -314,8 +296,7 @@ if(!id){
 return;
 }
 
-const numero =
-Number(id);
+const numero = Number(id);
 
 if(numero < 1 || numero > 661){
 
@@ -337,7 +318,11 @@ document.getElementById("mensaje").innerHTML =
 
 setTimeout(function(){
 
-listoParaOtra();
+document.getElementById("numero").value = "";
+document.getElementById("mensaje").innerHTML =
+"📷 LISTO PARA ESCANEAR O INTRODUCIR OTRA";
+
+procesando = false;
 
 },1500);
 
@@ -354,8 +339,7 @@ if(scanner !== null){
 return;
 }
 
-scanner =
-new Html5Qrcode("reader");
+scanner = new Html5Qrcode("reader");
 
 document.getElementById("mensaje").innerHTML =
 "📷 ABRIENDO CÁMARA...";
@@ -365,3 +349,104 @@ scanner.start(
 {facingMode:"environment"},
 
 {
+fps:10,
+qrbox:{
+width:280,
+height:280
+}
+},
+
+function(texto){
+
+if(procesando){
+return;
+}
+
+const id = extraerId(texto);
+
+if(!id){
+return;
+}
+
+const numero = Number(id);
+
+if(numero < 1 || numero > 661){
+
+document.getElementById("mensaje").innerHTML =
+"❌ PULSERA NO VÁLIDA";
+
+return;
+}
+
+procesando = true;
+
+document.getElementById("mensaje").innerHTML =
+"⏳ REGISTRANDO PULSERA " + id + "...";
+
+scanner.stop().then(function(){
+
+return scanner.clear();
+
+}).then(function(){
+
+scanner = null;
+
+registrarPulsera(id,function(){
+
+document.getElementById("numero").value = id;
+
+document.getElementById("mensaje").innerHTML =
+"✅ PULSERA " + id + "<br>REGISTRADA";
+
+setTimeout(function(){
+
+document.getElementById("numero").value = "";
+
+document.getElementById("mensaje").innerHTML =
+"📷 ABRIENDO SIGUIENTE QR...";
+
+procesando = false;
+
+setTimeout(function(){
+
+abrirCamara();
+
+},1000);
+
+},1500);
+
+});
+
+}).catch(function(){
+
+scanner = null;
+procesando = false;
+
+document.getElementById("mensaje").innerHTML =
+"❌ ERROR AL DETENER LA CÁMARA";
+
+});
+
+},
+
+function(errorMessage){
+
+}
+
+).catch(function(error){
+
+scanner = null;
+procesando = false;
+
+document.getElementById("mensaje").innerHTML =
+"❌ NO SE PUEDE ABRIR LA CÁMARA<br><br>" +
+"Comprueba el permiso de cámara.";
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
