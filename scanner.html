@@ -145,10 +145,7 @@ document.getElementById("mensaje").innerHTML = texto;
 
 }
 
-
 function registrarPulsera(id, despues){
-
-  mostrarMensaje("⏳ PROCESANDO...");
 
   const url =
     APP_URL +
@@ -156,19 +153,7 @@ function registrarPulsera(id, despues){
     "&accion=" + encodeURIComponent(accion) +
     "&voluntario=" + encodeURIComponent(voluntario);
 
-  const iframe = document.getElementById("registroOculto");
-
-  iframe.src = url;
-
-  setTimeout(function(){
-
-    mostrarMensaje("✅ REGISTRADA");
-
-    if(despues){
-      despues();
-    }
-
-  }, 2000);
+  window.location.href = url;
 }
 
 function registrarManual(){
