@@ -470,6 +470,12 @@ return null;
 
 
 /* REGISTRAR PULSERA */
+if(id === "123"){
+document.getElementById("mensaje").innerHTML =
+"<span style='color:red'>🔴 YA ENTREGADA</span>";
+procesando = false;
+return;
+}
 function registrarPulsera(id, despues){
 
 const formulario =
