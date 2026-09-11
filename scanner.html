@@ -197,8 +197,12 @@ qrbox:{width:250,height:250}
 
 (decodedText)=>{
 
+mostrarMensaje("QR LEÍDO: " + decodedText);
+
 const url = new URL(decodedText);
 const numero = url.searchParams.get("id");
+
+mostrarMensaje("ID EXTRAÍDO: " + numero);
 
 scanner.stop().then(()=>{
 
