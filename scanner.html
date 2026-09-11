@@ -114,16 +114,7 @@ REGISTRAR PULSERA
 <div id="reader"></div>
 
 <div id="mensaje"></div>
-<button onclick="location.reload()" style="
-margin-top:20px;
-padding:15px 25px;
-font-size:20px;
-font-weight:bold;
-border:0;
-border-radius:10px;
-">
-🔄 NUEVA PULSERA
-</button>
+
 </div>
 
 <iframe name="registroOculto" class="oculto"></iframe>
@@ -150,7 +141,10 @@ accion || "SIN ACCIÓN";
 
 function mostrarMensaje(texto){
 
-document.getElementById("mensaje").innerHTML = texto;
+  document.getElementById("mensaje").innerHTML = texto;
+
+}
+
 
 function registrarPulsera(id, despues){
 
@@ -163,20 +157,22 @@ function registrarPulsera(id, despues){
   window.location.href = url;
 }
 
+
 function registrarManual(){
 
-const numero =
-document.getElementById("numero").value.trim();
+  const numero =
+    document.getElementById("numero").value.trim();
 
-if(!numero){
+  if(!numero){
 
-mostrarMensaje("⚠️ Introduce el número de pulsera");
+    mostrarMensaje("⚠️ Introduce el número de pulsera");
 
-return;
-}
+    return;
+  }
 
-registrarPulsera(numero);
-document.getElementById("numero").value = "";
+  registrarPulsera(numero);
+
+  document.getElementById("numero").value = "";
 }
 
 
@@ -185,58 +181,69 @@ let scanner = null;
 
 function abrirCamara(){
 
-if(scanner){
-return;
-}
+  if(scanner){
+    return;
+  }
 
-mostrarMensaje("📷 Abriendo cámara...");
+  mostrarMensaje("📷 Abriendo cámara...");
 
-scanner =
-new Html5Qrcode("reader");
+  scanner =
+    new Html5Qrcode("reader");
 
 
-scanner.start(
-{facingMode:"environment"},
-{
-fps:10,
-qrbox:{width:250,height:250}
-},
+  scanner.start(
+    {facingMode:"environment"},
+    {
+      fps:10,
+      qrbox:{width:250,height:250}
+    },
 
-(decodedText)=>{
+    (decodedText)=>{
 
-mostrarMensaje("QR LEÍDO: " + decodedText);
+      mostrarMensaje("QR LEÍDO: " + decodedText);
 
-const url = new URL(decodedText);
-const numero = url.searchParams.get("id");
+      try{
 
-mostrarMensaje("ID EXTRAÍDO: " + numero);
+        const url = new URL(decodedText);
+        const numero = url.searchParams.get("id");
 
-scanner.stop().then(()=>{
+        if(!numero){
 
-scanner.clear();
+          mostrarMensaje("❌ QR no válido");
+          return;
+        }
 
-scanner = null;
+        mostrarMensaje("ID EXTRAÍDO: " + numero);
 
-registrarPulsera(numero, function(){
+        scanner.stop().then(()=>{
 
-abrirCamara();
+          scanner.clear();
 
-});
+          scanner = null;
 
-});
+          registrarPulsera(numero);
 
-},
+        });
 
-(errorMessage)=>{
+      }catch(error){
 
-}
-).catch((error)=>{
+        mostrarMensaje("❌ QR no válido");
 
-scanner = null;
+      }
 
-mostrarMensaje("❌ No se pudo abrir la cámara");
+    },
 
-});
+    (errorMessage)=>{
+
+    }
+
+  ).catch((error)=>{
+
+    scanner = null;
+
+    mostrarMensaje("❌ No se pudo abrir la cámara");
+
+  });
 
 }
 
