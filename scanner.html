@@ -198,7 +198,7 @@ qrbox:{width:250,height:250}
 (decodedText)=>{
 
 const numero =
-decodedText.trim();
+decodedText.replace(/\D/g, "");
 
 scanner.stop().then(()=>{
 
