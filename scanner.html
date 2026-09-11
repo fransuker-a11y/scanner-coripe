@@ -197,8 +197,8 @@ qrbox:{width:250,height:250}
 
 (decodedText)=>{
 
-const numero =
-decodedText.replace(/\D/g, "");
+const url = new URL(decodedText);
+const numero = url.searchParams.get("id");
 
 scanner.stop().then(()=>{
 
