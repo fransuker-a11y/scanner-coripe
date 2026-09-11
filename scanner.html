@@ -838,6 +838,12 @@ return;
 procesando = true;
 
 document.getElementById("mensaje").innerHTML =
+   if(id === "123"){
+document.getElementById("mensaje").innerHTML =
+"<span style='color:red'>🔴 YA ENTREGADA</span>";
+procesando = false;
+return;
+}
 "⏳ REGISTRANDO PULSERA " + id + "...";
 
 
