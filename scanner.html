@@ -148,63 +148,28 @@ document.getElementById("mensaje").innerHTML = texto;
 
 function registrarPulsera(id, despues){
 
-const formulario =
-document.createElement("form");
+  mostrarMensaje("⏳ PROCESANDO...");
 
-formulario.method = "GET";
-formulario.action = APP_URL;
-formulario.target = "registroOculto";
-formulario.style.display = "none";
+  const url =
+    APP_URL +
+    "?id=" + encodeURIComponent(id) +
+    "&accion=" + encodeURIComponent(accion) +
+    "&voluntario=" + encodeURIComponent(voluntario);
 
+  const iframe = document.getElementById("registroOculto");
 
-const campoId =
-document.createElement("input");
+  iframe.src = url;
 
-campoId.type = "hidden";
-campoId.name = "id";
-campoId.value = id;
+  setTimeout(function(){
 
+    mostrarMensaje("✅ REGISTRADA");
 
-const campoAccion =
-document.createElement("input");
+    if(despues){
+      despues();
+    }
 
-campoAccion.type = "hidden";
-campoAccion.name = "accion";
-campoAccion.value = accion;
-
-
-const campoVoluntario =
-document.createElement("input");
-
-campoVoluntario.type = "hidden";
-campoVoluntario.name = "voluntario";
-campoVoluntario.value = voluntario;
-
-
-formulario.appendChild(campoId);
-formulario.appendChild(campoAccion);
-formulario.appendChild(campoVoluntario);
-
-document.body.appendChild(formulario);
-
-formulario.submit();
-
-
-mostrarMensaje("⏳ Registrando...");
-
-
-setTimeout(function(){
-
-formulario.remove();
-
-if(despues){
-despues();
+  }, 2000);
 }
-
-},1500);
-
-}
-
 
 function registrarManual(){
 
