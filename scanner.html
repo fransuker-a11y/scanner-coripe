@@ -3,45 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prueba botones</title>
+
+<title>Control Coripe</title>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#f4f4f4;
+  font-family:Arial,sans-serif;
+  text-align:center;
+}
+
+.contenedor{
+  max-width:500px;
+  margin:auto;
+  padding:25px 20px;
+}
+
+h1{
+  margin-bottom:5px;
+}
+
+.info{
+  color:#555;
+  margin-bottom:25px;
+}
+
+input{
+  width:90%;
+  max-width:300px;
+  box-sizing:border-box;
+  padding:15px;
+  font-size:28px;
+  text-align:center;
+  border:2px solid #ccc;
+  border-radius:10px;
+}
+
+button{
+  width:90%;
+  max-width:320px;
+  padding:16px;
+  margin-top:15px;
+  font-size:20px;
+  font-weight:bold;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.manual{
+  background:#222;
+  color:white;
+}
+
+.cam{
+  background:#1976d2;
+  color:white;
+}
+
+#reader{
+  width:100%;
+  max-width:400px;
+  margin:25px auto;
+}
+
+#mensaje{
+  margin-top:25px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+.oculto{
+  display:none;
+}
+</style>
 </head>
 
-<body style="text-align:center;font-family:Arial;padding:30px;">
+<body>
+
+<div class="contenedor">
 
 <h1>CONTROL CORIPE</h1>
 
-<input id="numero" type="number"
-style="font-size:50px;width:250px;height:80px;text-align:center;">
+<div class="info">
+👤 <span id="voluntarioTexto"></span>
+<br>
+🎟️ <span id="accionTexto"></span>
+</div>
 
-<br><br>
+<input
+  id="numero"
+  type="number"
+  inputmode="numeric"
+  placeholder="Nº pulsera"
+>
 
-<button onclick="probarManual()"
-style="font-size:35px;padding:25px;">
-ENVIAR MANUAL
+<br>
+
+<button class="manual" onclick="registrarManual()">
+REGISTRAR PULSERA
 </button>
 
-<br><br>
-
-<button onclick="probarCamara()"
-style="font-size:35px;padding:25px;">
-📷 ABRIR CÁMARA
+<button class="cam" onclick="abrirCamara()">
+📷 ESCANEAR QR
 </button>
 
-<h2 id="mensaje">Esperando...</h2>
+<div id="reader"></div>
+
+<div id="mensaje"></div>
+
+</div>
+
+<iframe name="registroOculto" class="oculto"></iframe>
 
 <script>
 
-function probarManual(){
+const parametros = new URLSearchParams(window.location.search);
 
-document.getElementById("mensaje").innerHTML =
-"✅ EL BOTÓN MANUAL FUNCIONA";
+const voluntario =
+(parametros.get("voluntario") || "").trim().toUpperCase();
+
+const accion =
+(parametros.get("accion") || "").trim().toLowerCase();
+
+const APP_URL =
+"https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
+
+document.getElementById("voluntarioTexto").textContent =
+voluntario || "SIN VOLUNTARIO";
+
+document.getElementById("accionTexto").textContent =
+accion || "SIN ACCIÓN";
+
+
+function mostrarMensaje(texto){
+
+document.getElementById("mensaje").innerHTML = texto;
 
 }
 
-function probarCamara(){
 
-document.getElementById("mensaje").innerHTML =
-"📷 EL BOTÓN CÁMARA FUNCIONA";
+function registrarPulsera(id, despues){
+
+const formulario =
+document.createElement("form");
+
+formulario.method = "GET";
+formulario.action = APP_URL;
+formulario.target = "registroOculto";
+formulario.style.display = "none";
+
+
+const campoId =
+document.createElement("input");
+
+campoId.type = "hidden";
+campoId.name = "id";
+campoId.value = id;
+
+
+const campoAccion =
+document.createElement("input");
+
+campoAccion.type = "hidden";
+campoAccion.name = "accion";
+campoAccion.value = accion;
+
+
+const campoVoluntario =
+document.createElement("input");
+
+campoVoluntario.type = "hidden";
+campoVoluntario.name = "voluntario";
+campoVoluntario.value = voluntario;
+
+
+formulario.appendChild(campoId);
+formulario.appendChild(campoAccion);
+formulario.appendChild(campoVoluntario);
+
+document.body.appendChild(formulario);
+
+formulario.submit();
+
+
+mostrarMensaje("⏳ Registrando...");
+
+
+setTimeout(function(){
+
+formulario.remove();
+
+if(despues){
+despues();
+}
+
+},1500);
+
+}
+
+
+function registrarManual(){
+
+const numero =
+document.getElementById("numero").value.trim();
+
+if(!numero){
+
+mostrarMensaje("⚠️ Introduce el número de pulsera");
+
+return;
+}
+
+registrarPulsera(numero);
+
+}
+
+
+let scanner = null;
+
+
+function abrirCamara(){
+
+if(scanner){
+return;
+}
+
+mostrarMensaje("📷 Abriendo cámara...");
+
+scanner =
+new Html5Qrcode("reader");
+
+
+scanner.start(
+{facingMode:"environment"},
+{
+fps:10,
+qrbox:{width:250,height:250}
+},
+
+(decodedText)=>{
+
+const numero =
+decodedText.trim();
+
+scanner.stop().then(()=>{
+
+scanner.clear();
+
+scanner = null;
+
+registrarPulsera(numero, function(){
+
+abrirCamara();
+
+});
+
+});
+
+},
+
+(errorMessage)=>{
+
+}
+).catch((error)=>{
+
+scanner = null;
+
+mostrarMensaje("❌ No se pudo abrir la cámara");
+
+});
 
 }
 
@@ -49,3 +283,4 @@ document.getElementById("mensaje").innerHTML =
 
 </body>
 </html>
+
