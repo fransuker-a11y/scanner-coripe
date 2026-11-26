@@ -7,7 +7,12 @@
 <title>Control Coripe</title>
 
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.js"></script>
+
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   background:#f4f4f4;
@@ -16,6 +21,7 @@ body{
 }
 
 .contenedor{
+  width:100%;
   max-width:500px;
   margin:auto;
   padding:25px 20px;
@@ -33,7 +39,6 @@ h1{
 input{
   width:90%;
   max-width:300px;
-  box-sizing:border-box;
   padding:15px;
   font-size:28px;
   text-align:center;
@@ -64,26 +69,27 @@ button{
 }
 
 #reader{
-  width:180px;
-  height:180px;
+  width:100%;
+  max-width:420px;
+  aspect-ratio:4 / 3;
   margin:20px auto;
   overflow:hidden;
+  border-radius:12px;
+  background:#000;
 }
 
 #reader video{
-  width:180px;
-  height:180px;
-  object-fit:cover;
+  width:100%;
+  height:100%;
+  object-fit:contain;
   display:block;
-  border-radius:10px;
 }
-
-
 
 #mensaje{
   margin-top:25px;
   font-size:22px;
   font-weight:bold;
+  overflow-wrap:anywhere;
 }
 
 .oculto{
@@ -150,7 +156,7 @@ accion || "SIN ACCIÓN";
 
 
 function mostrarMensaje(texto){
-  document.getElementById("mensaje").innerHTML = texto;
+  document.getElementById("mensaje").textContent = texto;
 }
 
 
@@ -195,10 +201,10 @@ function detenerCamara(){
   }
 
   const video = document.querySelector("#reader video");
- 
 
   if(video && video.srcObject){
     video.srcObject.getTracks().forEach(pista => pista.stop());
+    video.srcObject = null;
   }
 
   scanner = null;
@@ -207,9 +213,7 @@ function detenerCamara(){
 
 function abrirCamara(){
 
-  if(scanner){
-    return;
-  }
+  if(scanner) return;
 
   if(!window.ZXingBrowser){
     mostrarMensaje("❌ No se pudo cargar el lector QR");
@@ -223,37 +227,24 @@ function abrirCamara(){
   scanner = new ZXingBrowser.BrowserMultiFormatReader();
 
   const reader = document.getElementById("reader");
-reader.innerHTML = "";
+  reader.innerHTML = "";
 
-const video = document.createElement("video");
+  const video = document.createElement("video");
 
-video.setAttribute("playsinline", "true");
-video.setAttribute("autoplay", "true");
-video.muted = true;
-  procesando = false;
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("autoplay", "true");
+  video.muted = true;
 
-  scanner = new ZXingBrowser.BrowserMultiFormatReader();
-
-  const reader = document.getElementById("reader");
-reader.innerHTML = "";
-
-const video = document.createElement("video");
-
-video.setAttribute("playsinline", "true");
-video.setAttribute("autoplay", "true");
-video.muted = true;
-
-video.style.width = "100%";
-video.style.height = "100%";
-video.style.objectFit = "cover";
-
-reader.appendChild(video);
+  reader.appendChild(video);
 
   scanner.decodeFromConstraints(
     {
       audio:false,
       video:{
-        facingMode:{ideal:"environment"}
+        facingMode:{ideal:"environment"},
+        width:{ideal:1920},
+        height:{ideal:1080},
+        focusMode:{ideal:"continuous"}
       }
     },
     video,
@@ -263,15 +254,11 @@ reader.appendChild(video);
         controlesCamara = controles;
       }
 
-      if(!resultado || procesando){
-        return;
-      }
+      if(!resultado || procesando) return;
 
       procesando = true;
 
       const decodedText = resultado.getText();
-
-      mostrarMensaje("QR LEÍDO: " + decodedText);
 
       try{
 
@@ -279,13 +266,12 @@ reader.appendChild(video);
         const numero = url.searchParams.get("id");
 
         if(!numero){
-
           procesando = false;
           mostrarMensaje("❌ QR no válido");
           return;
         }
 
-        mostrarMensaje("ID EXTRAÍDO: " + numero);
+        mostrarMensaje("✅ QR LEÍDO: " + numero);
 
         detenerCamara();
 
@@ -306,8 +292,7 @@ reader.appendChild(video);
   }).catch(error => {
 
     detenerCamara();
-
-    mostrarMensaje("❌ No se pudo abrir la cámara");
+    mostrarMensaje("❌ Error al abrir cámara: " + error.message);
 
   });
 
