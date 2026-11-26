@@ -6,7 +6,7 @@
 
 <title>Control Coripe</title>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
 
 <style>
 body{
@@ -68,6 +68,13 @@ button{
   width:100%;
   max-width:400px;
   margin:25px auto;
+}
+
+#reader video{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:10px;
 }
 
 #mensaje{
@@ -140,9 +147,7 @@ accion || "SIN ACCIÓN";
 
 
 function mostrarMensaje(texto){
-
   document.getElementById("mensaje").innerHTML = texto;
-
 }
 
 
@@ -164,9 +169,7 @@ function registrarManual(){
     document.getElementById("numero").value.trim();
 
   if(!numero){
-
     mostrarMensaje("⚠️ Introduce el número de pulsera");
-
     return;
   }
 
@@ -177,6 +180,25 @@ function registrarManual(){
 
 
 let scanner = null;
+let controlesCamara = null;
+let procesando = false;
+
+
+function detenerCamara(){
+
+  if(controlesCamara){
+    controlesCamara.stop();
+    controlesCamara = null;
+  }
+
+  const video = document.querySelector("#reader video");
+
+  if(video && video.srcObject){
+    video.srcObject.getTracks().forEach(pista => pista.stop());
+  }
+
+  scanner = null;
+}
 
 
 function abrirCamara(){
@@ -185,20 +207,48 @@ function abrirCamara(){
     return;
   }
 
+  if(!window.ZXingBrowser){
+    mostrarMensaje("❌ No se pudo cargar el lector QR");
+    return;
+  }
+
   mostrarMensaje("📷 Abriendo cámara...");
 
-  scanner =
-    new Html5Qrcode("reader");
+  procesando = false;
 
+  scanner = new ZXingBrowser.BrowserMultiFormatReader();
 
-  scanner.start(
-    {facingMode:"environment"},
+  const reader = document.getElementById("reader");
+  reader.innerHTML = "";
+
+  const video = document.createElement("video");
+  video.setAttribute("playsinline", "true");
+  video.setAttribute("autoplay", "true");
+  video.muted = true;
+
+  reader.appendChild(video);
+
+  scanner.decodeFromConstraints(
     {
-      fps:10,
-      qrbox:{width:250,height:250}
+      audio:false,
+      video:{
+        facingMode:{ideal:"environment"}
+      }
     },
+    video,
+    (resultado, error, controles) => {
 
-    (decodedText)=>{
+      if(controles){
+        controlesCamara = controles;
+      }
+
+      if(!resultado || procesando){
+        return;
+      }
+
+      procesando = true;
+
+      const decodedText = resultado.getText();
 
       mostrarMensaje("QR LEÍDO: " + decodedText);
 
@@ -209,37 +259,32 @@ function abrirCamara(){
 
         if(!numero){
 
+          procesando = false;
           mostrarMensaje("❌ QR no válido");
           return;
         }
 
         mostrarMensaje("ID EXTRAÍDO: " + numero);
 
-        scanner.stop().then(()=>{
+        detenerCamara();
 
-          scanner.clear();
-
-          scanner = null;
-
-          registrarPulsera(numero);
-
-        });
+        registrarPulsera(numero);
 
       }catch(error){
 
+        procesando = false;
         mostrarMensaje("❌ QR no válido");
 
       }
 
-    },
-
-    (errorMessage)=>{
-
     }
+  ).then(controles => {
 
-  ).catch((error)=>{
+    controlesCamara = controles;
 
-    scanner = null;
+  }).catch(error => {
+
+    detenerCamara();
 
     mostrarMensaje("❌ No se pudo abrir la cámara");
 
