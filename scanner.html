@@ -4,20 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Control Coripe</title>
+<title>Escáner Coripe</title>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-body {
+html, body {
   margin: 0;
-  background: #eeeeee;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
   font-family: Arial, sans-serif;
   text-align: center;
+  background: #eeeeee;
 }
 
 .contenedor {
-  max-width: 500px;
-  margin: auto;
-  padding: 15px 12px 30px;
+  padding: 12px 8px 30px;
 }
 
 h1 {
@@ -27,65 +30,52 @@ h1 {
 
 .info {
   background: white;
-  padding: 15px;
-  border-radius: 15px;
-  margin-bottom: 15px;
-  font-size: 21px;
-  font-weight: bold;
+  border-radius: 16px;
+  padding: 15px 8px;
+  margin-bottom: 12px;
 }
 
-input {
-  width: 90%;
-  max-width: 300px;
-  box-sizing: border-box;
-  padding: 15px;
-  font-size: 28px;
-  text-align: center;
-  border: 2px solid #ccc;
-  border-radius: 10px;
+.voluntario {
+  font-size: 25px;
+  font-weight: 900;
 }
 
-button {
-  width: 90%;
-  max-width: 320px;
-  padding: 16px;
-  margin-top: 15px;
-  font-size: 20px;
-  font-weight: bold;
-  border: 0;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.manual {
-  background: #222;
-  color: white;
+.accion {
+  font-size: 32px;
+  font-weight: 900;
+  margin-top: 8px;
 }
 
 #reader {
-  width: 220px;
-  height: 220px;
-  max-width: 70vw;
-  max-height: 70vw;
+  width: 120px;
+  height: 120px;
   margin: 12px auto;
-  background: #111;
+  background: white;
   border-radius: 12px;
   overflow: hidden;
 }
 
-#video {
+#reader video {
   width: 100% !important;
   height: 100% !important;
-  display: block;
   object-fit: cover;
 }
 
-#mensaje {
-  margin-top: 18px;
-  font-size: 18px;
-  font-weight: bold;
-  min-height: 45px;
-  overflow-wrap: anywhere;
+.mensaje {
+  font-size: 20px;
+  font-weight: 900;
+  margin: 18px 8px;
+}
+
+.volver {
+  display: inline-block;
+  padding: 15px 28px;
+  background: #555;
+  color: white;
+  text-decoration: none;
+  border-radius: 12px;
+  font-size: 21px;
+  font-weight: 900;
 }
 </style>
 </head>
@@ -94,45 +84,29 @@ button {
 
 <div class="contenedor">
 
-<h1>📷 CONTROL CORIPE</h1>
+<h1>📷 ESCANEAR QR</h1>
 
 <div class="info">
-👤 <span id="voluntarioTexto"></span>
-<br><br>
-🎟️ <span id="accionTexto"></span>
+  <div class="voluntario" id="voluntario"></div>
+  <div class="accion" id="accion"></div>
 </div>
 
-<input
-  id="numero"
-  type="number"
-  inputmode="numeric"
-  min="1"
-  max="661"
-  placeholder="Nº pulsera"
->
+<div id="reader"></div>
 
-<br>
-
-<button class="manual" id="botonManual">
-REGISTRAR PULSERA
-</button>
-
-<div id="reader">
-  <video id="video" autoplay muted playsinline></video>
+<div class="mensaje" id="mensaje">
+📷 Apunta al QR de la pulsera
 </div>
 
-<div id="mensaje">
-📷 Iniciando cámara...
-</div>
+<a class="volver" id="volver" href="#">
+⬅️ VOLVER
+</a>
 
 </div>
 
-<script type="module">
+<script>
 
-import {
-  BrowserMultiFormatReader
-} from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm";
-
+const APP_URL =
+"https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
 
 const parametros =
 new URLSearchParams(window.location.search);
@@ -143,77 +117,28 @@ const voluntario =
 const accion =
 (parametros.get("accion") || "").trim().toLowerCase();
 
-const APP_URL =
-"https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
+document.getElementById("voluntario").textContent =
+"👤 " + voluntario;
 
-document.getElementById("voluntarioTexto").textContent =
-voluntario || "SIN VOLUNTARIO";
+let nombreAccion = accion;
 
-document.getElementById("accionTexto").textContent =
-accion || "SIN ACCIÓN";
+if (accion === "bebida") nombreAccion = "🥤 BEBIDA";
+if (accion === "finished") nombreAccion = "🏁 FINISHED";
+if (accion === "almuerzo") nombreAccion = "🍽️ ALMUERZO";
 
+document.getElementById("accion").textContent =
+nombreAccion;
 
-function mostrarMensaje(texto) {
-  document.getElementById("mensaje").textContent = texto;
-}
-
-
-// REGISTRAR PULSERA
-
-function registrarPulsera(id) {
-
-  const numero = Number(id);
-
-  if (!Number.isInteger(numero) || numero < 1 || numero > 661) {
-    mostrarMensaje("❌ PULSERA NO VÁLIDA");
-    return;
-  }
-
-  mostrarMensaje("✅ PULSERA " + numero + " PROCESANDO...");
-
-  const url =
-    APP_URL +
-    "?id=" + encodeURIComponent(numero) +
-    "&accion=" + encodeURIComponent(accion) +
-    "&voluntario=" + encodeURIComponent(voluntario);
-
-  window.location.href = url;
-}
-
-
-// REGISTRO MANUAL
-
-document.getElementById("botonManual")
-.addEventListener("click", function() {
-
-  const numero =
-    document.getElementById("numero").value.trim();
-
-  if (!numero) {
-    mostrarMensaje("⚠️ Introduce el número de pulsera");
-    return;
-  }
-
-  registrarPulsera(numero);
-
-});
-
-
-// EXTRAER IDENTIFICADOR DEL QR
+document.getElementById("volver").href =
+APP_URL + "?voluntario=" +
+encodeURIComponent(voluntario);
 
 function extraerId(texto) {
 
   texto = String(texto).trim();
 
-  try {
-    const url = new URL(texto);
-    const id = url.searchParams.get("id");
-
-    if (id) return id;
-  } catch(error) {}
-
-  const encontrado =
-    texto.match(/[?&]id=([0-9]+)/i);
+  let encontrado =
+  texto.match(/[?&]id=([0-9]+)/i);
 
   if (encontrado) return encontrado[1];
 
@@ -222,94 +147,100 @@ function extraerId(texto) {
   return null;
 }
 
-
-// ESCÁNER ZXING
-
-let lector = null;
-let controles = null;
 let procesando = false;
+let scanner;
 
-
-async function qrLeido(texto) {
+function qrLeido(texto) {
 
   if (procesando) return;
-
-  mostrarMensaje("📖 QR DETECTADO: " + texto);
 
   const id = extraerId(texto);
 
   if (!id) {
-    mostrarMensaje("⚠️ QR LEÍDO, PERO NO RECONOCE EL NÚMERO: " + texto);
+    document.getElementById("mensaje").textContent =
+    "❌ QR NO VÁLIDO";
     return;
   }
 
   const numero = Number(id);
 
-  if (!Number.isInteger(numero) || numero < 1 || numero > 661) {
-    mostrarMensaje("❌ PULSERA NO VÁLIDA: " + numero);
+  if (!numero || numero < 1 || numero > 661) {
+    document.getElementById("mensaje").textContent =
+    "❌ PULSERA NO VÁLIDA";
     return;
   }
 
   procesando = true;
 
-  mostrarMensaje("✅ PULSERA " + numero + " PROCESANDO...");
+  document.getElementById("mensaje").innerHTML =
+  "✅ PULSERA " + id + "<br>PROCESANDO...";
 
-  if (controles) {
-    controles.stop();
-  }
+  const destino =
+  APP_URL +
+  "?id=" + encodeURIComponent(id) +
+  "&accion=" + encodeURIComponent(accion) +
+  "&voluntario=" + encodeURIComponent(voluntario);
 
-  registrarPulsera(numero);
+  scanner.stop().then(function() {
+    window.location.href = destino;
+  }).catch(function() {
+    window.location.href = destino;
+  });
 }
-
-
-// INICIAR CÁMARA
 
 async function iniciarScanner() {
 
   try {
 
-    lector = new BrowserMultiFormatReader();
-
-    mostrarMensaje("📷 Buscando cámara trasera...");
-
-    const dispositivos =
-      await lector.listVideoInputDevices();
-
-    if (!dispositivos.length) {
-      throw new Error("No se encuentra ninguna cámara");
+    if (typeof Html5Qrcode === "undefined") {
+      throw new Error("No se ha cargado la biblioteca QR");
     }
 
-    const trasera = dispositivos.find(camara =>
-      /back|rear|environment|trasera|posterior/i.test(camara.label)
+    scanner = new Html5Qrcode("reader", {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE
+      ]
+    });
+
+    await scanner.start(
+
+      { facingMode: "environment" },
+
+      {
+        fps: 15,
+
+        qrbox: function(ancho, alto) {
+
+          const lado = Math.min(
+            100,
+            Math.floor(Math.min(ancho, alto) * 0.80)
+          );
+
+          return {
+            width: lado,
+            height: lado
+          };
+        },
+
+        aspectRatio: 1.0
+      },
+
+      qrLeido,
+
+      function(error) {}
+
     );
-
-    const camaraElegida =
-      trasera || dispositivos[dispositivos.length - 1];
-
-    controles = await lector.decodeFromVideoDevice(
-      camaraElegida.deviceId,
-      document.getElementById("video"),
-      (resultado, error) => {
-
-        if (resultado && !procesando) {
-          qrLeido(resultado.getText());
-        }
-
-      }
-    );
-
-    mostrarMensaje("📷 APUNTA AL QR DE LA PULSERA");
 
   } catch(error) {
 
-    mostrarMensaje("❌ ERROR DEL ESCÁNER: " + error.message);
+    console.error(error);
+
+    document.getElementById("mensaje").innerHTML =
+    "❌ HA OCURRIDO UN ERROR<br><br>" +
+    "NO SE PUEDE INICIAR EL ESCÁNER";
 
   }
-
 }
-
-
-// ARRANQUE
 
 iniciarScanner();
 
