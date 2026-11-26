@@ -230,6 +230,18 @@ const video = document.createElement("video");
 video.setAttribute("playsinline", "true");
 video.setAttribute("autoplay", "true");
 video.muted = true;
+  procesando = false;
+
+  scanner = new ZXingBrowser.BrowserMultiFormatReader();
+
+  const reader = document.getElementById("reader");
+reader.innerHTML = "";
+
+const video = document.createElement("video");
+
+video.setAttribute("playsinline", "true");
+video.setAttribute("autoplay", "true");
+video.muted = true;
 
 video.style.width = "100%";
 video.style.height = "100%";
