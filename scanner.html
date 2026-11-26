@@ -6,8 +6,6 @@
 
 <title>Control Coripe</title>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
 <style>
 body {
   margin: 0;
@@ -65,15 +63,17 @@ button {
 }
 
 #reader {
-  width: 100%;
-  max-width: 400px;
-  margin: 15px auto;
+  width: 75%;
+  max-width: 280px;
+  margin: 12px auto;
   background: white;
   border-radius: 15px;
   overflow: hidden;
 }
 
-#reader video {
+#video {
+  width: 100%;
+  display: block;
   object-fit: cover;
 }
 
@@ -110,11 +110,13 @@ button {
 
 <br>
 
-<button class="manual" onclick="registrarManual()">
+<button class="manual" id="botonManual">
 REGISTRAR PULSERA
 </button>
 
-<div id="reader"></div>
+<div id="reader">
+  <video id="video" autoplay muted playsinline></video>
+</div>
 
 <div id="mensaje">
 📷 Iniciando cámara...
@@ -122,9 +124,15 @@ REGISTRAR PULSERA
 
 </div>
 
-<script>
+<script type="module">
 
-const parametros = new URLSearchParams(window.location.search);
+import {
+  BrowserMultiFormatReader
+} from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm";
+
+
+const parametros =
+new URLSearchParams(window.location.search);
 
 const voluntario =
 (parametros.get("voluntario") || "").trim().toUpperCase();
@@ -172,7 +180,8 @@ function registrarPulsera(id) {
 
 // REGISTRO MANUAL
 
-function registrarManual() {
+document.getElementById("botonManual")
+.addEventListener("click", function() {
 
   const numero =
     document.getElementById("numero").value.trim();
@@ -183,47 +192,51 @@ function registrarManual() {
   }
 
   registrarPulsera(numero);
-}
+
+});
 
 
-// ESCÁNER QR
-
-let scanner = null;
-let procesando = false;
-
+// EXTRAER IDENTIFICADOR DEL QR
 
 function extraerId(texto) {
 
   texto = String(texto).trim();
 
-  // Buscar número en un enlace con parámetro id
+  try {
+    const url = new URL(texto);
+    const id = url.searchParams.get("id");
+
+    if (id) return id;
+  } catch(error) {}
+
   const encontrado =
     texto.match(/[?&]id=([0-9]+)/i);
 
   if (encontrado) return encontrado[1];
 
-  // Si el QR contiene solamente un número
   if (/^[0-9]+$/.test(texto)) return texto;
 
   return null;
 }
 
 
-// QR DETECTADO
+// ESCÁNER ZXING
+
+let lector = null;
+let controles = null;
+let procesando = false;
+
 
 async function qrLeido(texto) {
 
   if (procesando) return;
 
-  // Mostrar el contenido leído para poder comprobarlo
   mostrarMensaje("📖 QR DETECTADO: " + texto);
 
   const id = extraerId(texto);
 
   if (!id) {
-    mostrarMensaje(
-      "⚠️ QR LEÍDO, PERO NO RECONOCE EL NÚMERO: " + texto
-    );
+    mostrarMensaje("⚠️ QR LEÍDO, PERO NO RECONOCE EL NÚMERO: " + texto);
     return;
   }
 
@@ -238,70 +251,58 @@ async function qrLeido(texto) {
 
   mostrarMensaje("✅ PULSERA " + numero + " PROCESANDO...");
 
-  try {
-    await scanner.stop();
-  } catch (error) {}
+  if (controles) {
+    controles.stop();
+  }
 
   registrarPulsera(numero);
 }
 
 
-// INICIAR CÁMARA AUTOMÁTICAMENTE
+// INICIAR CÁMARA
 
 async function iniciarScanner() {
 
-  if (!window.Html5Qrcode) {
-    mostrarMensaje("❌ ERROR AL CARGAR EL ESCÁNER");
-    return;
-  }
-
-  scanner = new Html5Qrcode("reader", {
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.QR_CODE
-    ],
-    verbose: false
-  });
-
   try {
 
-    await scanner.start(
+    lector = new BrowserMultiFormatReader();
 
-      { facingMode: "environment" },
+    mostrarMensaje("📷 Buscando cámara trasera...");
 
-      {
-        fps: 20,
+    const dispositivos =
+      await lector.listVideoInputDevices();
 
-        qrbox: function(ancho, alto) {
+    if (!dispositivos.length) {
+      throw new Error("No se encuentra ninguna cámara");
+    }
 
-          const lado = Math.floor(
-            Math.min(ancho, alto) * 0.85
-          );
+    const trasera = dispositivos.find(camara =>
+      /back|rear|environment|trasera|posterior/i.test(camara.label)
+    );
 
-          return {
-            width: lado,
-            height: lado
-          };
-        },
+    const camaraElegida =
+      trasera || dispositivos[dispositivos.length - 1];
 
-        aspectRatio: 1.0,
-        disableFlip: false
-      },
+    controles = await lector.decodeFromVideoDevice(
+      camaraElegida.deviceId,
+      document.getElementById("video"),
+      (resultado, error) => {
 
-      qrLeido,
+        if (resultado && !procesando) {
+          qrLeido(resultado.getText());
+        }
 
-      function(error) {}
-
+      }
     );
 
     mostrarMensaje("📷 APUNTA AL QR DE LA PULSERA");
 
   } catch(error) {
 
-    mostrarMensaje(
-      "❌ ERROR AL ABRIR LA CÁMARA: " + error
-    );
+    mostrarMensaje("❌ ERROR DEL ESCÁNER: " + error.message);
 
   }
+
 }
 
 
