@@ -225,6 +225,7 @@ function abrirCamara(){
   procesando = false;
 
   scanner = new ZXingBrowser.BrowserMultiFormatReader();
+  console.log("ZXing iniciado correctamente");
 
   const reader = document.getElementById("reader");
   reader.innerHTML = "";
