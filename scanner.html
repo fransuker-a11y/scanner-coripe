@@ -224,7 +224,7 @@ function abrirCamara(){
   const reader = document.getElementById("reader");
   reader.innerHTML = "";
 
-  const video = document.createElement("video");
+  reader.appendChild(video);
   video.setAttribute("playsinline", "true");
   video.setAttribute("autoplay", "true");
   video.muted = true;
