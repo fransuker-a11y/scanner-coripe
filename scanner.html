@@ -195,6 +195,10 @@ function detenerCamara(){
   }
 
   const video = document.querySelector("#reader video");
+  video.width = 180;
+video.height = 180;
+video.style.width = "180px";
+video.style.height = "180px";
 
   if(video && video.srcObject){
     video.srcObject.getTracks().forEach(pista => pista.stop());
