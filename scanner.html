@@ -210,9 +210,10 @@ function detenerCamara(){
   scanner = null;
 }
 
-
 function abrirCamara(){
-alert("BOTÓN CONECTADO");
+
+  alert("BOTÓN CONECTADO");
+
   if(scanner) return;
 
   if(!window.ZXingBrowser){
@@ -225,7 +226,6 @@ alert("BOTÓN CONECTADO");
   procesando = false;
 
   scanner = new ZXingBrowser.BrowserMultiFormatReader();
-  console.log("ZXing iniciado correctamente");
 
   const reader = document.getElementById("reader");
   reader.innerHTML = "";
@@ -236,12 +236,53 @@ alert("BOTÓN CONECTADO");
   video.setAttribute("autoplay", "true");
   video.muted = true;
 
+  video.style.width = "100%";
+  video.style.height = "100%";
+  video.style.objectFit = "contain";
+
   reader.appendChild(video);
 
-}).catch(error => {
+  scanner.decodeFromVideoDevice(
+    undefined,
+    video,
+    (resultado, error, controles) => {
+
+      if(controles){
+        controlesCamara = controles;
+      }
+
+      if(!resultado || procesando) return;
+
+      procesando = true;
+
+      try{
+
+        const url = new URL(resultado.getText());
+        const numero = url.searchParams.get("id");
+
+        if(!numero){
+          procesando = false;
+          mostrarMensaje("❌ QR no válido");
+          return;
+        }
+
+        mostrarMensaje("✅ QR LEÍDO: " + numero);
+
+        detenerCamara();
+        registrarPulsera(numero);
+
+      }catch(error){
+
+        procesando = false;
+        mostrarMensaje("❌ QR no válido");
+
+      }
+
+    }
+  ).catch(error => {
 
     detenerCamara();
-    mostrarMensaje("❌ Error al abrir la cámara");
+    mostrarMensaje("❌ Error cámara: " + error.message);
 
   });
 
