@@ -79,9 +79,10 @@ button {
 
 #mensaje {
   margin-top: 18px;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: bold;
   min-height: 45px;
+  overflow-wrap: anywhere;
 }
 </style>
 </head>
@@ -123,8 +124,7 @@ REGISTRAR PULSERA
 
 <script>
 
-const parametros =
-new URLSearchParams(window.location.search);
+const parametros = new URLSearchParams(window.location.search);
 
 const voluntario =
 (parametros.get("voluntario") || "").trim().toUpperCase();
@@ -196,11 +196,13 @@ function extraerId(texto) {
 
   texto = String(texto).trim();
 
+  // Buscar número en un enlace con parámetro id
   const encontrado =
     texto.match(/[?&]id=([0-9]+)/i);
 
   if (encontrado) return encontrado[1];
 
+  // Si el QR contiene solamente un número
   if (/^[0-9]+$/.test(texto)) return texto;
 
   return null;
@@ -213,17 +215,22 @@ async function qrLeido(texto) {
 
   if (procesando) return;
 
+  // Mostrar el contenido leído para poder comprobarlo
+  mostrarMensaje("📖 QR DETECTADO: " + texto);
+
   const id = extraerId(texto);
 
   if (!id) {
-    mostrarMensaje("❌ QR NO VÁLIDO");
+    mostrarMensaje(
+      "⚠️ QR LEÍDO, PERO NO RECONOCE EL NÚMERO: " + texto
+    );
     return;
   }
 
   const numero = Number(id);
 
   if (!Number.isInteger(numero) || numero < 1 || numero > 661) {
-    mostrarMensaje("❌ PULSERA NO VÁLIDA");
+    mostrarMensaje("❌ PULSERA NO VÁLIDA: " + numero);
     return;
   }
 
@@ -233,9 +240,7 @@ async function qrLeido(texto) {
 
   try {
     await scanner.stop();
-  } catch (error) {
-    // Continuar con el registro
-  }
+  } catch (error) {}
 
   registrarPulsera(numero);
 }
@@ -250,7 +255,12 @@ async function iniciarScanner() {
     return;
   }
 
-  scanner = new Html5Qrcode("reader");
+  scanner = new Html5Qrcode("reader", {
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE
+    ],
+    verbose: false
+  });
 
   try {
 
@@ -259,13 +269,12 @@ async function iniciarScanner() {
       { facingMode: "environment" },
 
       {
-        fps: 15,
+        fps: 20,
 
         qrbox: function(ancho, alto) {
 
-          const lado = Math.min(
-            220,
-            Math.floor(Math.min(ancho, alto) * 0.70)
+          const lado = Math.floor(
+            Math.min(ancho, alto) * 0.85
           );
 
           return {
@@ -275,12 +284,7 @@ async function iniciarScanner() {
         },
 
         aspectRatio: 1.0,
-
-        videoConstraints: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
+        disableFlip: false
       },
 
       qrLeido,
@@ -294,7 +298,7 @@ async function iniciarScanner() {
   } catch(error) {
 
     mostrarMensaje(
-      "❌ NO SE PUEDE ABRIR LA CÁMARA. COMPRUEBA LOS PERMISOS."
+      "❌ ERROR AL ABRIR LA CÁMARA: " + error
     );
 
   }
