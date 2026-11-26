@@ -237,62 +237,10 @@ function abrirCamara(){
 
   reader.appendChild(video);
 
-  scanner.decodeFromConstraints(
-    {
-      audio:false,
-      video:{
-        facingMode:{ideal:"environment"},
-        width:{ideal:1920},
-        height:{ideal:1080},
-        focusMode:{ideal:"continuous"}
-      }
-    },
-    video,
-    (resultado, error, controles) => {
-
-      if(controles){
-        controlesCamara = controles;
-      }
-
-      if(!resultado || procesando) return;
-
-      procesando = true;
-
-      const decodedText = resultado.getText();
-
-      try{
-
-        const url = new URL(decodedText);
-        const numero = url.searchParams.get("id");
-
-        if(!numero){
-          procesando = false;
-          mostrarMensaje("❌ QR no válido");
-          return;
-        }
-
-        mostrarMensaje("✅ QR LEÍDO: " + numero);
-
-        detenerCamara();
-
-        registrarPulsera(numero);
-
-      }catch(error){
-
-        procesando = false;
-        mostrarMensaje("❌ QR no válido");
-
-      }
-
-    }
-  ).then(controles => {
-
-    controlesCamara = controles;
-
-  }).catch(error => {
+}).catch(error => {
 
     detenerCamara();
-    mostrarMensaje("❌ Error al abrir cámara: " + error.message);
+    mostrarMensaje("❌ Error al abrir la cámara");
 
   });
 
