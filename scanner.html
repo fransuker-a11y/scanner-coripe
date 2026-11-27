@@ -9,6 +9,10 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: #eeeeee;
@@ -39,7 +43,6 @@ h1 {
 input {
   width: 90%;
   max-width: 300px;
-  box-sizing: border-box;
   padding: 15px;
   font-size: 28px;
   text-align: center;
@@ -74,7 +77,9 @@ button {
 }
 
 #reader video {
-  object-fit: cover;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 #mensaje {
@@ -186,11 +191,13 @@ function registrarManual() {
 }
 
 
-// ESCÁNER QR
+// ESCÁNER QR MEJORADO
 
 let scanner = null;
 let procesando = false;
 
+
+// EXTRAER ID DEL QR
 
 function extraerId(texto) {
 
@@ -241,7 +248,7 @@ async function qrLeido(texto) {
 }
 
 
-// INICIAR CÁMARA AUTOMÁTICAMENTE
+// INICIAR CÁMARA
 
 async function iniciarScanner() {
 
@@ -250,7 +257,15 @@ async function iniciarScanner() {
     return;
   }
 
-  scanner = new Html5Qrcode("reader");
+  scanner = new Html5Qrcode("reader", {
+    verbose: false,
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
+    },
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE
+    ]
+  });
 
   try {
 
@@ -259,13 +274,12 @@ async function iniciarScanner() {
       { facingMode: "environment" },
 
       {
-        fps: 15,
+        fps: 20,
 
         qrbox: function(ancho, alto) {
 
-          const lado = Math.min(
-            220,
-            Math.floor(Math.min(ancho, alto) * 0.70)
+          const lado = Math.floor(
+            Math.min(320, Math.min(ancho, alto) * 0.80)
           );
 
           return {
@@ -274,20 +288,36 @@ async function iniciarScanner() {
           };
         },
 
-        aspectRatio: 1.0,
+        aspectRatio: 16 / 9,
 
         videoConstraints: {
           facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
         }
       },
 
       qrLeido,
 
-      function(error) {}
+      function(error) {
+        // Ignorar errores normales de lectura
+      }
 
     );
+
+    // INTENTAR ENFOQUE AUTOMÁTICO CONTINUO
+
+    try {
+      await scanner.applyVideoConstraints({
+        advanced: [
+          { focusMode: "continuous" }
+        ]
+      });
+    } catch (error) {
+      // Si el móvil no admite esta función,
+      // la cámara mantiene su enfoque normal
+    }
 
     mostrarMensaje("📷 APUNTA AL QR DE LA PULSERA");
 
@@ -301,7 +331,7 @@ async function iniciarScanner() {
 }
 
 
-// ARRANQUE
+// ARRANQUE AUTOMÁTICO
 
 iniciarScanner();
 
