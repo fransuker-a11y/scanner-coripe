@@ -3,98 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Control Coripe</title>
 
-<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-* {
-  box-sizing: border-box;
+body{
+  margin:0;
+  background:#f4f4f4;
+  font-family:Arial,sans-serif;
+  text-align:center;
 }
 
-body {
-  margin: 0;
-  padding: 18px;
-  background: #f1f1f1;
-  font-family: Arial, sans-serif;
-  text-align: center;
+.contenedor{
+  max-width:500px;
+  margin:auto;
+  padding:25px 20px;
 }
 
-h1 {
-  margin: 10px 0 20px;
-  font-size: 27px;
+h1{
+  margin-bottom:5px;
 }
 
-.contenedor {
-  max-width: 500px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 15px;
+.info{
+  color:#555;
+  margin-bottom:25px;
 }
 
-.cam {
-  width: 100%;
-  min-height: 75px;
-  border: 0;
-  border-radius: 12px;
-  background: #111;
-  color: white;
-  font-size: 23px;
-  font-weight: bold;
-  cursor: pointer;
+input{
+  width:90%;
+  max-width:300px;
+  box-sizing:border-box;
+  padding:15px;
+  font-size:28px;
+  text-align:center;
+  border:2px solid #ccc;
+  border-radius:10px;
 }
 
-#video {
-  display: none;
-  width: 100%;
-  max-height: 350px;
-  margin-top: 15px;
-  background: #000;
-  border-radius: 12px;
-  object-fit: cover;
+button{
+  width:90%;
+  max-width:320px;
+  padding:16px;
+  margin-top:15px;
+  font-size:20px;
+  font-weight:bold;
+  border:0;
+  border-radius:10px;
+  cursor:pointer;
 }
 
-.parar {
-  display: none;
-  width: 100%;
-  margin-top: 10px;
-  padding: 15px;
-  background: #b3261e;
-  color: white;
-  border: 0;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: bold;
+.manual{
+  background:#222;
+  color:white;
 }
 
-input {
-  width: 100%;
-  padding: 17px;
-  margin-top: 20px;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  font-size: 22px;
-  text-align: center;
+.cam{
+  background:#1976d2;
+  color:white;
 }
 
-.registrar {
-  width: 100%;
-  padding: 17px;
-  margin-top: 10px;
-  background: #16803c;
-  color: white;
-  border: 0;
-  border-radius: 10px;
-  font-size: 20px;
-  font-weight: bold;
+#reader{
+  width:100%;
+  max-width:400px;
+  margin:25px auto;
 }
 
-#mensaje {
-  margin-top: 18px;
-  font-size: 18px;
-  font-weight: bold;
-  overflow-wrap: anywhere;
+#mensaje{
+  margin-top:25px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+.oculto{
+  display:none;
 }
 </style>
 </head>
@@ -102,162 +85,168 @@ input {
 <body>
 
 <div class="contenedor">
-  <h1>CONTROL CORIPE</h1>
 
-  <button class="cam" onclick="abrirCamara()">
-    📷 ESCANEAR QR
-  </button>
+<h1>CONTROL CORIPE</h1>
 
-  <video id="video" playsinline muted></video>
-
-  <button class="parar" id="botonParar" onclick="detenerCamara()">
-    CERRAR CÁMARA
-  </button>
-
-  <input
-    type="text"
-    id="numero"
-    placeholder="Número de pulsera"
-    inputmode="numeric"
-    autocomplete="off"
-  >
-
-  <button class="registrar" onclick="registrarPulsera()">
-    REGISTRAR
-  </button>
-
-  <div id="mensaje"></div>
+<div class="info">
+👤 <span id="voluntarioTexto"></span>
+<br>
+🎟️ <span id="accionTexto"></span>
 </div>
 
+<input
+  id="numero"
+  type="number"
+  inputmode="numeric"
+  placeholder="Nº pulsera"
+>
+
+<br>
+
+<button class="manual" onclick="registrarManual()">
+REGISTRAR PULSERA
+</button>
+
+<button class="cam" onclick="abrirCamara()">
+📷 ESCANEAR QR
+</button>
+
+<div id="reader"></div>
+
+<div id="mensaje"></div>
+
+</div>
+
+<iframe name="registroOculto" class="oculto"></iframe>
+
 <script>
-const APP_URL = "https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
 
 const parametros = new URLSearchParams(window.location.search);
-const voluntario = parametros.get("voluntario") || "";
-const accion = parametros.get("accion") || "";
 
-let lector = null;
-let controlesCamara = null;
-let procesando = false;
+const voluntario =
+(parametros.get("voluntario") || "").trim().toUpperCase();
 
-function mensaje(texto, color = "#222") {
-  const elemento = document.getElementById("mensaje");
-  elemento.textContent = texto;
-  elemento.style.color = color;
+const accion =
+(parametros.get("accion") || "").trim().toLowerCase();
+
+const APP_URL =
+"https://script.google.com/macros/s/AKfycbxywhlWvDfGCLM1BNhRKMUlSPtxS4E-Odce8zDqrqIHe2ggtEkk7gTJvRHMm6FKRdRz/exec";
+
+document.getElementById("voluntarioTexto").textContent =
+voluntario || "SIN VOLUNTARIO";
+
+document.getElementById("accionTexto").textContent =
+accion || "SIN ACCIÓN";
+
+
+function mostrarMensaje(texto){
+
+  document.getElementById("mensaje").innerHTML = texto;
+
 }
 
-async function abrirCamara() {
-  mensaje("Preparando cámara...");
 
-  if (!window.isSecureContext) {
-    mensaje("Abre la página mediante HTTPS.", "red");
+function registrarPulsera(id, despues){
+
+  const url =
+    APP_URL +
+    "?id=" + encodeURIComponent(id) +
+    "&accion=" + encodeURIComponent(accion) +
+    "&voluntario=" + encodeURIComponent(voluntario);
+
+  window.location.href = url;
+}
+
+
+function registrarManual(){
+
+  const numero =
+    document.getElementById("numero").value.trim();
+
+  if(!numero){
+
+    mostrarMensaje("⚠️ Introduce el número de pulsera");
+
     return;
   }
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    mensaje("Este navegador no permite acceder a la cámara.", "red");
+  registrarPulsera(numero);
+
+  document.getElementById("numero").value = "";
+}
+
+
+let scanner = null;
+
+
+function abrirCamara(){
+
+  if(scanner){
     return;
   }
 
-  if (!window.ZXingBrowser) {
-    mensaje("No se ha podido cargar el lector QR. Comprueba tu conexión.", "red");
-    return;
-  }
+  mostrarMensaje("📷 Abriendo cámara...");
 
-  try {
-    detenerCamara();
+  scanner =
+    new Html5Qrcode("reader");
 
-    lector = new ZXingBrowser.BrowserMultiFormatReader();
 
-    const video = document.getElementById("video");
-    video.style.display = "block";
-    document.getElementById("botonParar").style.display = "block";
+  scanner.start(
+    {facingMode:"environment"},
+    {
+      fps:10,
+      qrbox:{width:250,height:250}
+    },
 
-    mensaje("Solicitando permiso para usar la cámara...");
+    (decodedText)=>{
 
-    controlesCamara = await lector.decodeFromVideoDevice(
-      undefined,
-      video,
-      (resultado, error) => {
-        if (resultado && !procesando) {
-          procesando = true;
+      mostrarMensaje("QR LEÍDO: " + decodedText);
 
-          const textoQR = resultado.getText();
-          let numero = textoQR;
+      try{
 
-          try {
-            const url = new URL(textoQR);
-            numero = url.searchParams.get("id") || textoQR;
-          } catch (e) {
-            // Si el QR no contiene una URL, se usa su texto directamente.
-          }
+        const url = new URL(decodedText);
+        const numero = url.searchParams.get("id");
 
-          document.getElementById("numero").value = numero;
+        if(!numero){
 
-          detenerCamara();
-          registrarPulsera(numero);
+          mostrarMensaje("❌ QR no válido");
+          return;
         }
+
+        mostrarMensaje("ID EXTRAÍDO: " + numero);
+
+        scanner.stop().then(()=>{
+
+          scanner.clear();
+
+          scanner = null;
+
+          registrarPulsera(numero);
+
+        });
+
+      }catch(error){
+
+        mostrarMensaje("❌ QR no válido");
+
       }
-    );
 
-    mensaje("Cámara activa. Enfoca el código QR.", "green");
+    },
 
-  } catch (error) {
-    detenerCamara();
-    mensaje("No se pudo abrir la cámara: " + error.message, "red");
-  }
+    (errorMessage)=>{
+
+    }
+
+  ).catch((error)=>{
+
+    scanner = null;
+
+    mostrarMensaje("❌ No se pudo abrir la cámara");
+
+  });
+
 }
 
-function detenerCamara() {
-  if (controlesCamara) {
-    controlesCamara.stop();
-    controlesCamara = null;
-  }
-
-  if (lector) {
-    lector = null;
-  }
-
-  const video = document.getElementById("video");
-
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(pista => pista.stop());
-    video.srcObject = null;
-  }
-
-  video.style.display = "none";
-  document.getElementById("botonParar").style.display = "none";
-  procesando = false;
-}
-
-async function registrarPulsera(numeroForzado) {
-  const numero = String(
-    numeroForzado || document.getElementById("numero").value
-  ).trim();
-
-  if (!numero) {
-    mensaje("Introduce o escanea un número de pulsera.", "red");
-    return;
-  }
-
-  mensaje("Registrando pulsera...");
-
-  const url = APP_URL +
-    "?id=" + encodeURIComponent(numero) +
-    "&voluntario=" + encodeURIComponent(voluntario) +
-    "&accion=" + encodeURIComponent(accion);
-
-  try {
-    const respuesta = await fetch(url);
-    const resultado = await respuesta.text();
-
-    mensaje(resultado, "green");
-    document.getElementById("numero").value = "";
-
-  } catch (error) {
-    mensaje("Error al registrar. Comprueba la conexión.", "red");
-  }
-}
 </script>
 
 </body>
